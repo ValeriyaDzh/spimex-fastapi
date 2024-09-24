@@ -1,0 +1,16 @@
+[tool.poetry]
+name = "spimex-fastapi"
+version = "0.1.0"
+description = ""
+authors = ["Valeriya <Dzhavadova.v@yandex.ru>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.11"
+fastapi = "^0.115.0"
+uvicorn = "^0.30.6"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
