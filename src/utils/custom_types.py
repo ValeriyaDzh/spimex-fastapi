@@ -1,8 +1,8 @@
 from datetime import datetime
 from typing import Annotated
-from uuid import uuid4, UUID
+from uuid import uuid4
 
-from sqlalchemy import DateTime, text
+from sqlalchemy import DateTime, UUID, text
 from sqlalchemy.orm import mapped_column
 
 

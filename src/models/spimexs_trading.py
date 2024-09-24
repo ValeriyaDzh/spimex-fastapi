@@ -3,7 +3,7 @@ from datetime import date
 from sqlalchemy import CheckConstraint
 from sqlalchemy.orm import Mapped
 
-from src.database.db import Base
+from src.models import Base
 from src.utils.custom_types import uuid_pk, created_on, updated_on
 
 
