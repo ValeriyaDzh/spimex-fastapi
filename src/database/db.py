@@ -12,10 +12,6 @@ async_session_maker = async_sessionmaker(
 )
 
 
-class Base(DeclarativeBase):
-    pass
-
-
 async def get_async_session() -> AsyncGenerator[AsyncSession, None]:
     try:
         async with async_session_maker() as session:
