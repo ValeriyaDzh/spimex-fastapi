@@ -1,13 +1,19 @@
 import asyncio
 import os
 from datetime import datetime, date, timedelta
+from typing import TYPE_CHECKING
 
 import pandas as pd
+from fastapi import Query
+from sqlalchemy import select, and_
 from httpx import AsyncClient
 
 from src.models import SpimexTradingResults
-from src.schemas import SpimexLastTradingDates
+from src.schemas import TradingFilters
 from src.utils.repository import SqlAlchemyRepository
+
+if TYPE_CHECKING:
+    from collections.abc import Sequence
 
 
 class SpimexRepository(SqlAlchemyRepository):
@@ -20,7 +26,35 @@ class SpimexRepository(SqlAlchemyRepository):
 
     async def get_last_trading_dates(self, days_num: int):
         res = await self.get_orderly_query_with_limit(self.model.date, days_num)
-        return SpimexLastTradingDates(dates=res)
+        return res
+
+    async def get_dynamics(
+        self, start_date: date, end_date: date, filters: TradingFilters
+    ):
+        query = select(self.model).where(
+            and_(self.model.date >= start_date, self.model.date <= end_date)
+        )
+
+        query = await self.__apply_filters(query, filters)
+
+        res = await self.session.execute(query)
+        results: Sequence[self.model] = res.scalars().all()
+        print(len(results))
+        return [trading.to_pydantic_schema() for trading in results]
+
+    async def __apply_filters(self, query: Query, filters: TradingFilters):
+        if filters.oil_id:
+            query = query.where(self.model.oil_id == filters.oil_id)
+
+        if filters.delivery_type_id:
+            query = query.where(self.model.delivery_type_id == filters.delivery_type_id)
+
+        if filters.delivery_basis_id:
+            query = query.where(
+                self.model.delivery_basis_id == filters.delivery_basis_id
+            )
+
+        return query
 
     async def save_to_db(self, date: date) -> None:
         dates = self.__get_dates(date)
@@ -36,7 +70,7 @@ class SpimexRepository(SqlAlchemyRepository):
                 prepared_obj = []
                 df_data = self.__get_necessary_data(f"{date}_spimex_data.xls")
                 for _, row in df_data.iterrows():
-                    obj = SpimexTradingResults(
+                    obj = self.model(
                         exchange_product_id=row["exchange_product_id"],
                         exchange_product_name=row["exchange_product_name"],
                         oil_id=row["exchange_product_id"][:4],
