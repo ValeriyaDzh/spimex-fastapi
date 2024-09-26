@@ -4,6 +4,8 @@ from datetime import date, datetime
 from fastapi import Query
 from pydantic import BaseModel, Field
 
+from src.schemas.filter import BaseFilter
+
 
 class TradingResultsSchema(BaseModel):
     exchange_product_id: str
@@ -32,7 +34,7 @@ class TradingResultsList(BaseModel):
 
 
 @dataclass
-class TradingFilters:
+class TradingFilters(BaseFilter):
     oil_id: str | None = Query(None)
     delivery_type_id: str | None = Query(None)
     delivery_basis_id: str | None = Query(None)

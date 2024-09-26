@@ -36,9 +36,12 @@ class SpimexRepository(SqlAlchemyRepository):
         )
 
         query = await self.__apply_filters(query, filters)
-        res = await self.session.execute(query)
+        # res = await self.session.execute(query)
+        res = await self.session.execute(
+            query.limit(filters.limit).offset(filters.offset)
+        )
         results: Sequence[self.model] = res.scalars().all()
-
+        print(len(results))
         return [trading.to_pydantic_schema() for trading in results]
 
     async def __apply_filters(self, query: Query, filters: TradingFilters):
