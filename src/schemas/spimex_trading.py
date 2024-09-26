@@ -16,10 +16,10 @@ class SpimexTradingResultsBase(BaseModel):
     date: date
 
 
-class SpimexTradingResultsCreate(SpimexTradingResultsBase):
-    pass
-
-
 class SpimexTradingResults(SpimexTradingResultsBase):
     created_on: datetime
     updated_on: datetime
+
+
+class SpimexLastTradingDates(BaseModel):
+    dates: list[date]
