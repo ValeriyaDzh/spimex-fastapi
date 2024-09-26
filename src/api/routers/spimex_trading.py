@@ -7,7 +7,7 @@ from pydantic import UUID4
 from src.repositories import SpimexRepository
 
 from src.api.routers.dependensies import get_spimex_repository
-from src.schemas import SpimexTradingResults
+from src.schemas import SpimexTradingResults, SpimexLastTradingDates
 
 if TYPE_CHECKING:
     from src.repositories import SpimexRepository
@@ -22,6 +22,17 @@ async def get_spimex_trading_results(
 ) -> None:
 
     return await spimex_repo.save_to_db(date)
+
+
+@router.get(
+    "/last-trading-days", status_code=200, response_model=SpimexLastTradingDates
+)
+async def get_trading_days(
+    days: int,
+    spimex_repo: SpimexRepository = Depends(get_spimex_repository),
+) -> None:
+
+    return await spimex_repo.get_last_trading_dates(days)
 
 
 @router.get("/{id}", status_code=200, response_model=SpimexTradingResults)

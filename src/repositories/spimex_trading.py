@@ -6,6 +6,7 @@ import pandas as pd
 from httpx import AsyncClient
 
 from src.models import SpimexTradingResults
+from src.schemas import SpimexLastTradingDates
 from src.utils.repository import SqlAlchemyRepository
 
 
@@ -17,8 +18,11 @@ class SpimexRepository(SqlAlchemyRepository):
         res = await self.get_by_id(id)
         return res
 
-    async def save_to_db(self, date: date) -> None:
+    async def get_last_trading_dates(self, days_num: int):
+        res = await self.get_orderly_query_with_limit(self.model.date, days_num)
+        return SpimexLastTradingDates(dates=res)
 
+    async def save_to_db(self, date: date) -> None:
         dates = self.__get_dates(date)
         try:
             async with AsyncClient() as client:
