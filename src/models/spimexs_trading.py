@@ -4,6 +4,7 @@ from sqlalchemy import CheckConstraint
 from sqlalchemy.orm import Mapped
 
 from src.models import Base
+from src.schemas import TradingResultsSchema
 from src.utils.custom_types import uuid_pk, created_on, updated_on
 
 
@@ -30,3 +31,6 @@ class SpimexTradingResults(Base):
     date: Mapped[date]
     created_on: Mapped[created_on]
     updated_on: Mapped[updated_on]
+
+    def to_pydantic_schema(self) -> TradingResultsSchema:
+        return TradingResultsSchema(**self.__dict__)
