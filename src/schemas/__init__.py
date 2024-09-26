@@ -1,11 +1,13 @@
 __all__ = [
-    "SpimexTradingResultsBase",
-    "SpimexTradingResults",
-    "SpimexLastTradingDates",
+    "TradingResultsSchema",
+    "LastTradingResultsDates",
+    "TradingResultsList",
+    "TradingFilters",
 ]
 
 from src.schemas.spimex_trading import (
-    SpimexTradingResultsBase,
-    SpimexTradingResults,
-    SpimexLastTradingDates,
+    TradingResultsSchema,
+    LastTradingResultsDates,
+    TradingResultsList,
+    TradingFilters,
 )
