@@ -36,18 +36,20 @@ class SpimexRepository(SqlAlchemyRepository):
         )
 
         query = await self.__apply_filters(query, filters)
-
         res = await self.session.execute(query)
         results: Sequence[self.model] = res.scalars().all()
-        print(len(results))
+
         return [trading.to_pydantic_schema() for trading in results]
 
     async def __apply_filters(self, query: Query, filters: TradingFilters):
+        # uses_filters = (oil_id, delivery_type_id, delivery_basis_id)
         if filters.oil_id:
-            query = query.where(self.model.oil_id == filters.oil_id)
+            query = query.filter(self.model.oil_id == filters.oil_id)
 
         if filters.delivery_type_id:
-            query = query.where(self.model.delivery_type_id == filters.delivery_type_id)
+            query = query.filter(
+                self.model.delivery_type_id == filters.delivery_type_id
+            )
 
         if filters.delivery_basis_id:
             query = query.where(
@@ -71,16 +73,13 @@ class SpimexRepository(SqlAlchemyRepository):
                 df_data = self.__get_necessary_data(f"{date}_spimex_data.xls")
                 for _, row in df_data.iterrows():
                     obj = self.model(
-                        exchange_product_id=row["exchange_product_id"],
-                        exchange_product_name=row["exchange_product_name"],
-                        oil_id=row["exchange_product_id"][:4],
-                        delivery_basis_id=row["exchange_product_id"][4:7],
-                        delivery_basis_name=row["delivery_basis_name"],
-                        delivery_type_id=row["exchange_product_id"][-1],
-                        volume=row["volume"],
-                        total=row["total"],
-                        count=row["count"],
-                        date=date,
+                        **row.to_dict()
+                        | {
+                            "oil_id": row["exchange_product_id"][:4],
+                            "delivery_basis_id": row["exchange_product_id"][4:7],
+                            "delivery_type_id": row["exchange_product_id"][-1],
+                            "date": date,
+                        }
                     )
                     prepared_obj.append(obj)
                 await self.save_all(prepared_obj)
