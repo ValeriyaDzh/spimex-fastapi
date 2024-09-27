@@ -23,8 +23,18 @@ class DatabaseSettings(BaseSettings):
         )
 
 
+class RedisSettings(BaseSettings):
+
+    HOST: str
+    PORT: str
+    EXPIRE: int
+
+    model_config = SettingsConfigDict(env_prefix="REDIS_", extra="ignore")
+
+
 class Settings(BaseSettings):
     db: DatabaseSettings = DatabaseSettings()
+    redis: RedisSettings = RedisSettings()
 
 
 settings = Settings()
