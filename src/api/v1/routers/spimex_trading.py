@@ -40,6 +40,15 @@ async def get_trading_days(
     return LastTradingResultsDates(dates=result)
 
 
+@router.get("/trading-results", status_code=200, response_model=TradingResultsList)
+async def get_trading_results(
+    sp_filters: TradingFilters = Depends(TradingFilters),
+    spimex_repo: SpimexRepository = Depends(get_spimex_repository),
+) -> None:
+    result = await spimex_repo.get_trading_results(sp_filters)
+    return TradingResultsList(playload=result)
+
+
 @router.get("/dynamics", status_code=200, response_model=TradingResultsList)
 async def get_dynamics(
     start: date,

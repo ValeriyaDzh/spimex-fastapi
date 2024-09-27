@@ -25,26 +25,35 @@ class SpimexRepository(SqlAlchemyRepository):
         return res
 
     async def get_last_trading_dates(self, days_num: int):
-        res = await self.get_orderly_query_with_limit(self.model.date, days_num)
+        res = await self.get_grouped_query_with_limit(self.model.date, days_num)
         return res
+
+    async def get_trading_results(self, filters: TradingFilters) -> list[dict]:
+        last_trading_date = await self.get_orderly_query_with_limit(self.model.date, 1)
+        if last_trading_date is None:
+            return []
+
+        query = select(self.model).where(self.model.date == last_trading_date[0])
+        query = await self.__apply_filters(query, filters)
+
+        return await self.__execute_and_fetch(
+            query.limit(filters.limit).offset(filters.offset)
+        )
 
     async def get_dynamics(
         self, start_date: date, end_date: date, filters: TradingFilters
-    ):
+    ) -> list[dict]:
         query = select(self.model).where(
             and_(self.model.date >= start_date, self.model.date <= end_date)
         )
 
         query = await self.__apply_filters(query, filters)
-        # res = await self.session.execute(query)
-        res = await self.session.execute(
+
+        return await self.__execute_and_fetch(
             query.limit(filters.limit).offset(filters.offset)
         )
-        results: Sequence[self.model] = res.scalars().all()
-        print(len(results))
-        return [trading.to_pydantic_schema() for trading in results]
 
-    async def __apply_filters(self, query: Query, filters: TradingFilters):
+    async def __apply_filters(self, query: Query, filters: TradingFilters) -> Query:
         # uses_filters = (oil_id, delivery_type_id, delivery_basis_id)
         if filters.oil_id:
             query = query.filter(self.model.oil_id == filters.oil_id)
@@ -60,6 +69,11 @@ class SpimexRepository(SqlAlchemyRepository):
             )
 
         return query
+
+    async def __execute_and_fetch(self, query: Query) -> list[dict]:
+        res = await self.session.execute(query.order_by(self.model.created_on.desc()))
+        results: Sequence[self.model] = res.scalars().all()
+        return [trading.to_pydantic_schema() for trading in results]
 
     async def save_to_db(self, date: date) -> None:
         dates = self.__get_dates(date)
