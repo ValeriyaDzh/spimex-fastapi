@@ -30,8 +30,6 @@ class SpimexRepository(SqlAlchemyRepository):
 
     async def get_trading_results(self, filters: TradingFilters) -> list[dict]:
         last_trading_date = await self.get_orderly_query_with_limit(self.model.date, 1)
-        if last_trading_date is None:
-            return []
 
         query = select(self.model).where(self.model.date == last_trading_date[0])
         query = await self.__apply_filters(query, filters)
@@ -54,19 +52,15 @@ class SpimexRepository(SqlAlchemyRepository):
         )
 
     async def __apply_filters(self, query: Query, filters: TradingFilters) -> Query:
-        # uses_filters = (oil_id, delivery_type_id, delivery_basis_id)
-        if filters.oil_id:
-            query = query.filter(self.model.oil_id == filters.oil_id)
+        filters_dict = {
+            self.model.oil_id: filters.oil_id,
+            self.model.delivery_type_id: filters.delivery_type_id,
+            self.model.delivery_basis_id: filters.delivery_basis_id,
+        }
 
-        if filters.delivery_type_id:
-            query = query.filter(
-                self.model.delivery_type_id == filters.delivery_type_id
-            )
-
-        if filters.delivery_basis_id:
-            query = query.where(
-                self.model.delivery_basis_id == filters.delivery_basis_id
-            )
+        for column, value in filters_dict.items():
+            if value:
+                query = query.filter(column == value)
 
         return query
 
