@@ -1,4 +1,6 @@
 from dotenv import load_dotenv
+from logging.config import dictConfig
+
 from pydantic import SecretStr
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
@@ -32,9 +34,42 @@ class RedisSettings(BaseSettings):
     model_config = SettingsConfigDict(env_prefix="REDIS_", extra="ignore")
 
 
+class LoggingSettings(BaseSettings):
+
+    def configure_logging(self):
+        dictConfig(
+            {
+                "version": 1,
+                "disable_existing_loggers": False,
+                "formatters": {
+                    "default": {
+                        "format": "%(asctime)s - %(name)s - %(levelname)s - %(message)s",
+                        "datefmt": "%Y-%m-%d %H:%M:%S",
+                    },
+                },
+                "handlers": {
+                    "file": {
+                        "level": "DEBUG",
+                        "formatter": "default",
+                        "class": "logging.FileHandler",
+                        "filename": "loger.log",
+                    },
+                },
+                "loggers": {
+                    "": {
+                        "handlers": ["file"],
+                        "level": "DEBUG",
+                        "propagate": False,
+                    },
+                },
+            }
+        )
+
+
 class Settings(BaseSettings):
     db: DatabaseSettings = DatabaseSettings()
     redis: RedisSettings = RedisSettings()
+    log: LoggingSettings = LoggingSettings()
 
 
 settings = Settings()

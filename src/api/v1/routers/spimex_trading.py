@@ -1,3 +1,4 @@
+import logging
 from datetime import date
 from typing import TYPE_CHECKING
 
@@ -19,6 +20,9 @@ from src.schemas import (
 if TYPE_CHECKING:
     from src.repositories import SpimexRepository
 
+
+logger = logging.getLogger(__name__)
+
 router = APIRouter()
 
 
@@ -38,7 +42,8 @@ async def get_spimex_trading_results(
 async def get_trading_days(
     days: int,
     spimex_repo: SpimexRepository = Depends(get_spimex_repository),
-) -> None:
+):
+    logger.info("Fetching data from the database (last-trading-days)")
     result = await spimex_repo.get_last_trading_dates(days)
     return LastTradingResultsDates(dates=result)
 
@@ -48,7 +53,8 @@ async def get_trading_days(
 async def get_trading_results(
     sp_filters: TradingFilters = Depends(TradingFilters),
     spimex_repo: SpimexRepository = Depends(get_spimex_repository),
-) -> None:
+):
+    logger.info("Fetching data from the database (trading-results)")
     result = await spimex_repo.get_trading_results(sp_filters)
     return TradingResultsList(playload=result)
 
@@ -60,7 +66,8 @@ async def get_dynamics(
     end: date,
     sp_filters: TradingFilters = Depends(TradingFilters),
     spimex_repo: SpimexRepository = Depends(get_spimex_repository),
-) -> None:
+):
+    logger.info("Fetching data from the database (dynamics)")
     result = await spimex_repo.get_dynamics(
         start_date=start, end_date=end, filters=sp_filters
     )
@@ -71,6 +78,6 @@ async def get_dynamics(
 async def get_spimex_trading_results(
     id: UUID4,
     spimex_repo: SpimexRepository = Depends(get_spimex_repository),
-) -> None:
+):
 
     return await spimex_repo.get_trading(id)

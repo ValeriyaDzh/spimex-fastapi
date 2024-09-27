@@ -1,16 +1,21 @@
+import logging
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
-from fastapi_cache import FastAPICache
-from fastapi_cache.backends.redis import RedisBackend
 
 from src.api import router
-from src.utils.redis import redis
+from src.utils.redis import init_redis_cache
+from src.config import settings
+
+
+settings.log.configure_logging()
+logger = logging.getLogger(__name__)
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    FastAPICache.init(RedisBackend(redis), prefix="fastapi-cache")
+    logger.info("Init FastAPI cache")
+    init_redis_cache()
     yield
 
 
