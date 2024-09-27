@@ -6,7 +6,7 @@ from pydantic import UUID4
 
 from src.repositories import SpimexRepository
 
-from src.api.routers.dependensies import get_spimex_repository
+from src.api.v1.routers.dependensies import get_spimex_repository
 from src.schemas import (
     TradingResultsSchema,
     LastTradingResultsDates,
