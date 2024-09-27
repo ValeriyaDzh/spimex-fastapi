@@ -25,11 +25,6 @@ class SqlAlchemyRepository:
         self.session = session
 
     async def save_all(self, entities: list[T]) -> None:
-        """
-        Save a new entities in the database.
-
-        :param entities: list of the new entities.
-        """
         self.session.add_all(entities)
         await self.session.commit()
 
@@ -39,13 +34,18 @@ class SqlAlchemyRepository:
         )
         return result.scalar_one_or_none()
 
-    async def get_by_query_all(self, **kwargs: Any) -> Sequence[T]:
-        query = select(self.model).filter_by(**kwargs)
-        result: Result = await self.session.execute(query)
-        return result.scalars().all()
-
-    async def get_orderly_query_with_limit(self, column: Column, limit: int) -> list[T]:
+    async def get_grouped_query_with_limit(
+        self, column: Column, limit: int
+    ) -> Sequence[T]:
         result: Result = await self.session.execute(
             select(column).group_by(column).order_by(desc(column)).limit(limit)
+        )
+        return result.scalars().all()
+
+    async def get_orderly_query_with_limit(
+        self, column: Column, limit: int
+    ) -> Sequence[T]:
+        result: Result = await self.session.execute(
+            select(column).order_by(desc(column)).limit(limit)
         )
         return result.scalars().all()
