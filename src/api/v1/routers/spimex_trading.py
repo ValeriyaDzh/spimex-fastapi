@@ -2,9 +2,11 @@ from datetime import date
 from typing import TYPE_CHECKING
 
 from fastapi import APIRouter, Depends
+from fastapi_cache.decorator import cache
 from pydantic import UUID4
 
 from src.repositories import SpimexRepository
+from src.config import settings
 
 from src.api.v1.routers.dependensies import get_spimex_repository
 from src.schemas import (
@@ -32,6 +34,7 @@ async def get_spimex_trading_results(
 @router.get(
     "/last-trading-days", status_code=200, response_model=LastTradingResultsDates
 )
+@cache(expire=settings.redis.EXPIRE)
 async def get_trading_days(
     days: int,
     spimex_repo: SpimexRepository = Depends(get_spimex_repository),
@@ -41,6 +44,7 @@ async def get_trading_days(
 
 
 @router.get("/trading-results", status_code=200, response_model=TradingResultsList)
+@cache(expire=settings.redis.EXPIRE)
 async def get_trading_results(
     sp_filters: TradingFilters = Depends(TradingFilters),
     spimex_repo: SpimexRepository = Depends(get_spimex_repository),
@@ -50,6 +54,7 @@ async def get_trading_results(
 
 
 @router.get("/dynamics", status_code=200, response_model=TradingResultsList)
+@cache(expire=settings.redis.EXPIRE)
 async def get_dynamics(
     start: date,
     end: date,
