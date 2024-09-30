@@ -1,0 +1,67 @@
+services:
+  app:
+    container_name: spimex_app
+    environment:
+      DB_PROTOCOL: ${DB_PROTOCOL}
+      DB_HOST: ${DB_HOST}
+      DB_PORT: ${DB_PORT}
+      DB_NAME: ${DB_NAME}
+      DB_USER: ${DB_USER}
+      DB_PASSWORD: ${DB_PASSWORD}
+      REDIS_HOST: ${REDIS_HOST}
+      REDIS_PORT: ${REDIS_PORT}
+    build:
+      context: ./
+      dockerfile: Dockerfile
+    command: |
+      bash -c "
+      poetry run celery -A src.utils.celery worker --loglevel=info -B --detach &&
+      poetry run alembic upgrade head &&
+      poetry run uvicorn src.main:app --host 0.0.0.0 --port 8000
+      "
+    depends_on:
+      - db
+      - redis
+    ports:
+      - "8000:8000"
+    networks:
+      - spimex
+
+  db:
+    image: postgres:15.7
+    container_name: postgres
+    environment:
+      POSTGRES_DB: ${DB_NAME}
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      PGDATA: "/var/lib/postgresql/data/pgdata"
+    ports:
+      - ${DB_PORT}:${DB_PORT}
+    volumes:
+      - spimex_data:/var/lib/postgresql/data
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U ${DB_USER} -d ${DB_NAME}" ]
+      interval: 10s
+      timeout: 10s
+      retries: 5
+    networks:
+      - spimex
+
+  redis:
+    image: redis
+    container_name: redis
+    ports:
+      - ${REDIS_PORT}:6379
+    volumes:
+      - redis_data:/data
+    networks:
+      - spimex
+
+volumes:
+  spimex_data:
+  redis_data:
+
+
+networks:
+  spimex:
+    driver: bridge
