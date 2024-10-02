@@ -24,7 +24,7 @@ class SpimexRepository(SqlAlchemyRepository):
         res = await self.get_by_id(id)
         return res
 
-    async def get_last_trading_dates(self, days_num: int):
+    async def get_last_trading_dates(self, days_num: int) -> list[date]:
         res = await self.get_grouped_query_with_limit(self.model.date, days_num)
         return res
 
