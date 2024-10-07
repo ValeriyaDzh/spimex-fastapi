@@ -25,6 +25,7 @@ celery = "^5.4.0"
 
 [tool.poetry.group.dev.dependencies]
 pytest = "^8.3.3"
+pytest-dotenv = "^0.5.2"
 
 [build-system]
 requires = ["poetry-core"]
