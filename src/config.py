@@ -1,13 +1,15 @@
-from dotenv import load_dotenv
+from dotenv import load_dotenv, find_dotenv
 from logging.config import dictConfig
 
 from pydantic import SecretStr
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
-load_dotenv()
+load_dotenv(find_dotenv())
 
 
 class DatabaseSettings(BaseSettings):
+
+    MODE: str
 
     PROTOCOL: str
     HOST: str
@@ -16,7 +18,9 @@ class DatabaseSettings(BaseSettings):
     USER: str
     PASSWORD: SecretStr
 
-    model_config = SettingsConfigDict(extra="ignore", env_prefix="DB_")
+    model_config = SettingsConfigDict(
+        extra="ignore", env_prefix="DB_", env_file=".dev.env"
+    )
 
     @property
     def URL(self):
@@ -31,7 +35,9 @@ class RedisSettings(BaseSettings):
     PORT: str
     EXPIRE: int
 
-    model_config = SettingsConfigDict(env_prefix="REDIS_", extra="ignore")
+    model_config = SettingsConfigDict(
+        env_prefix="REDIS_", extra="ignore", env_file=".dev.env"
+    )
 
 
 class LoggingSettings(BaseSettings):
