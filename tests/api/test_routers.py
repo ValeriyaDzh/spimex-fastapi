@@ -6,6 +6,19 @@ from tests.conftest import TEST_SPIMEX_DATA
 
 
 class TestSpimexEndpoind:
+
+    @pytest.mark.asyncio
+    async def test_save_spimex_trading_results(self, mocker, api_client: AsyncClient):
+        mocker.patch(
+            "src.repositories.SpimexRepository.save_to_db",
+            return_value="saving done",
+        )
+
+        response = await api_client.get("api/v1/", params={"date": date(2024, 10, 7)})
+
+        assert response.status_code == 200
+        assert "saving done" in response.json()
+
     @pytest.mark.usefixtures("fastapi_cache")
     @pytest.mark.asyncio
     async def test_get_trading_days(self, api_client: AsyncClient):
