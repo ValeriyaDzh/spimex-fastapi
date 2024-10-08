@@ -1,4 +1,5 @@
 import pytest
+from datetime import date
 from httpx import AsyncClient
 
 from tests.conftest import TEST_SPIMEX_DATA
@@ -10,7 +11,6 @@ async def test_get_trading_days(api_client: AsyncClient):
     response = await api_client.get("api/v1/last-trading-days", params={"days": 6})
 
     data = response.json()
-    print(data)
     assert response.status_code == 200
     assert len(data["dates"]) == 6
 
@@ -41,4 +41,46 @@ async def test_get_trading_results(
 
     data = response.json()
     assert response.status_code == 200
+    assert len(data["playload"]) == quantity
+
+
+@pytest.mark.usefixtures("fastapi_cache")
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    "start, end, oil_id, delivery_type_id, delivery_basis_id, quantity",
+    [
+        (date(2024, 10, 1), date(2024, 10, 6), None, None, None, 7),
+        (date(2024, 10, 1), date(2024, 10, 3), None, None, None, 3),
+        (date(2024, 10, 1), date(2024, 10, 2), "ONE", None, None, 1),
+        (date(2024, 10, 1), date(2024, 10, 6), "TWO", "B", "TWO", 1),
+        (date(2024, 10, 1), date(2024, 10, 6), None, None, "THREE", 1),
+        (date(2024, 10, 1), date(2024, 10, 6), "FOUR", "D", None, 1),
+        (date(2024, 10, 3), date(2024, 10, 6), None, "D", None, 4),
+        (date(2024, 10, 1), date(2024, 10, 6), None, None, "EIGHT", 0),
+        (date(2024, 10, 6), date(2024, 10, 1), None, None, None, 0),
+    ],
+)
+async def test_get_dynamics(
+    api_client: AsyncClient,
+    start,
+    end,
+    oil_id,
+    delivery_type_id,
+    delivery_basis_id,
+    quantity,
+):
+    response = await api_client.get(
+        "api/v1/dynamics",
+        params={
+            "start": start,
+            "end": end,
+            "oil_id": oil_id,
+            "delivery_type_id": delivery_type_id,
+            "delivery_basis_id": delivery_basis_id,
+        },
+    )
+
+    data = response.json()
+    assert response.status_code == 200
+
     assert len(data["playload"]) == quantity
