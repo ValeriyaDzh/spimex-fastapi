@@ -27,7 +27,7 @@ router = APIRouter()
 
 
 @router.get("/", status_code=200)
-async def get_spimex_trading_results(
+async def save_spimex_trading_results(
     date: date,
     spimex_repo: SpimexRepository = Depends(get_spimex_repository),
 ) -> None:
