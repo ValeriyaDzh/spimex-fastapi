@@ -47,6 +47,25 @@ class TestSpimexRepository:
         assert len(dates) == 3
 
     @pytest.mark.asyncio
+    async def test_download_and_save(self, mocker, mock_session):
+        mock_response = mocker.Mock()
+        mock_response.status_code = 200
+        mock_response.content = b"fake file"
+
+        mock_client = mocker.AsyncMock(spec=AsyncClient)
+        mock_client.get = mocker.AsyncMock(return_value=mock_response)
+
+        repository = SpimexRepository(mock_session)
+        test_date = date(2024, 10, 7)
+        await repository._download_and_save(test_date, mock_client)
+
+        assert os.path.exists(f"{test_date}_spimex_data.xls") == True
+        with open(f"{test_date}_spimex_data.xls") as file:
+            assert file.read() == "fake file"
+
+        os.remove(f"{test_date}_spimex_data.xls")
+
+    @pytest.mark.asyncio
     async def test_get_necessary_data(self, mocker, excel_file, mock_session):
         mocker.patch("pandas.read_excel", return_value=pd.read_excel(excel_file))
 
