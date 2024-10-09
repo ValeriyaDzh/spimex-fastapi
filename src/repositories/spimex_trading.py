@@ -32,9 +32,9 @@ class SpimexRepository(SqlAlchemyRepository):
         last_trading_date = await self.get_orderly_query_with_limit(self.model.date, 1)
 
         query = select(self.model).where(self.model.date == last_trading_date[0])
-        query = await self.__apply_filters(query, filters)
+        query = await self._apply_filters(query, filters)
 
-        return await self.__execute_and_fetch(
+        return await self._execute_and_fetch(
             query.limit(filters.limit).offset(filters.offset)
         )
 
@@ -45,13 +45,13 @@ class SpimexRepository(SqlAlchemyRepository):
             and_(self.model.date >= start_date, self.model.date <= end_date)
         )
 
-        query = await self.__apply_filters(query, filters)
+        query = await self._apply_filters(query, filters)
 
-        return await self.__execute_and_fetch(
+        return await self._execute_and_fetch(
             query.limit(filters.limit).offset(filters.offset)
         )
 
-    async def __apply_filters(self, query: Query, filters: TradingFilters) -> Query:
+    async def _apply_filters(self, query: Query, filters: TradingFilters) -> Query:
         filters_dict = {
             self.model.oil_id: filters.oil_id,
             self.model.delivery_type_id: filters.delivery_type_id,
@@ -64,16 +64,16 @@ class SpimexRepository(SqlAlchemyRepository):
 
         return query
 
-    async def __execute_and_fetch(self, query: Query) -> list[dict]:
+    async def _execute_and_fetch(self, query: Query) -> list[dict]:
         res = await self.session.execute(query.order_by(self.model.created_on.desc()))
         results: Sequence[self.model] = res.scalars().all()
         return [trading.to_pydantic_schema() for trading in results]
 
     async def save_to_db(self, date: date) -> None:
-        dates = self.__get_dates(date)
+        dates = self._get_dates(date)
         try:
             async with AsyncClient() as client:
-                tasks = [self.__download_and_save(date, client) for date in dates]
+                tasks = [self._download_and_save(date, client) for date in dates]
                 await asyncio.gather(*tasks)
         except Exception as e:
             print(f"Error while download: {e}!")
@@ -81,7 +81,7 @@ class SpimexRepository(SqlAlchemyRepository):
         for date in dates:
             if os.path.exists(f"{date}_spimex_data.xls"):
                 prepared_obj = []
-                df_data = self.__get_necessary_data(f"{date}_spimex_data.xls")
+                df_data = self._get_necessary_data(f"{date}_spimex_data.xls")
                 for _, row in df_data.iterrows():
                     obj = self.model(
                         **row.to_dict()
@@ -96,7 +96,7 @@ class SpimexRepository(SqlAlchemyRepository):
                 await self.save_all(prepared_obj)
                 os.remove(f"{date}_spimex_data.xls")
 
-    def __get_dates(self, date: date) -> list[date]:
+    def _get_dates(self, date: date) -> list[date]:
         dates = []
         today = datetime.now().date()
         while date != today:
@@ -104,14 +104,14 @@ class SpimexRepository(SqlAlchemyRepository):
             today -= timedelta(days=1)
         return dates
 
-    async def __download_and_save(self, date: datetime, client: AsyncClient) -> None:
+    async def _download_and_save(self, date: datetime, client: AsyncClient) -> None:
         url = f"https://spimex.com/upload/reports/oil_xls/oil_xls_{date.strftime('%Y%m%d')}162000.xls"
         response = await client.get(url=url, timeout=5)
         if response.status_code == 200:
             with open(f"{date}_spimex_data.xls", "wb") as file:
                 file.write(response.content)
 
-    def __get_necessary_data(self, file: str) -> pd.DataFrame:
+    def _get_necessary_data(self, file: str) -> pd.DataFrame:
         columns_names = [
             "exchange_product_id",
             "exchange_product_name",

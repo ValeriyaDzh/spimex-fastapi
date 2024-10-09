@@ -1,4 +1,18 @@
+# Environments
 .venv
-.env
+*.env
 
+# Byte-compiled / optimized / DLL files
 __pycache__
+.DS_Store
+
+# Logger
+*.log
+
+# Celery stuff
+celerybeat-schedule
+celerybeat.pid
+
+# Coverage reports
+htmlcov/
+.coverage

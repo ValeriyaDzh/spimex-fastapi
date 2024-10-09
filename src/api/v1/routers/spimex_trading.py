@@ -2,7 +2,7 @@ import logging
 from datetime import date
 from typing import TYPE_CHECKING
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi_cache.decorator import cache
 from pydantic import UUID4
 
@@ -27,7 +27,7 @@ router = APIRouter()
 
 
 @router.get("/", status_code=200)
-async def get_spimex_trading_results(
+async def save_spimex_trading_results(
     date: date,
     spimex_repo: SpimexRepository = Depends(get_spimex_repository),
 ) -> None:
@@ -79,5 +79,11 @@ async def get_spimex_trading_results(
     id: UUID4,
     spimex_repo: SpimexRepository = Depends(get_spimex_repository),
 ):
-
-    return await spimex_repo.get_trading(id)
+    result = await spimex_repo.get_trading(id)
+    if result:
+        return result
+    else:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="There are no trading results with this id",
+        )
