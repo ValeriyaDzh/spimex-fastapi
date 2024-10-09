@@ -52,7 +52,6 @@ class TestSpimexRepository:
 
         repository = SpimexRepository(mock_session)
         df = repository._get_necessary_data("mocked_file.xlsx")
-        print(df)
 
         assert df.shape == (4, 6)
         assert df["delivery_basis_name"].str.contains("TODEL").any() == False
@@ -65,3 +64,23 @@ class TestSpimexRepository:
             "count",
         ]
         assert df["volume"].dtype == int
+
+    @pytest.mark.asyncio
+    async def test_save_to_db(self, mocker, excel_file, test_session):
+        mocker.patch(
+            "src.repositories.spimex_trading.AsyncClient",
+            return_value=mocker.AsyncMock(spec=AsyncClient),
+        )
+        mocker.patch.object(
+            SpimexRepository, "_get_dates", return_value=[date(2024, 10, 7)]
+        )
+        mocker.patch.object(
+            SpimexRepository, "_download_and_save", new_callable=mocker.AsyncMock
+        )
+        mocker.patch("os.path.exists", return_value=True)
+        mocker.patch("pandas.read_excel", return_value=pd.read_excel(excel_file))
+        mocker.patch("os.remove")
+
+        repository = SpimexRepository(test_session)
+        await repository.save_to_db(date(2024, 10, 7))
+        os.remove.assert_called_once_with("2024-10-07_spimex_data.xls")
