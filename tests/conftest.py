@@ -75,7 +75,7 @@ def fastapi_cache():
     yield
 
 
-@pytest.fixture(scope="function", autouse=True)
+@pytest.fixture(scope="function")
 async def test_session():
     async with async_session_maker() as session:
         yield session
@@ -99,7 +99,6 @@ async def api_client() -> AsyncGenerator[AsyncClient, None]:
 @pytest.fixture
 def excel_file():
     df = pd.DataFrame(TEST_EXCEL_DATA)
-    print(df)
     excel_buffer = BytesIO()
     with pd.ExcelWriter(excel_buffer) as writer:
         df.to_excel(writer, index=False, sheet_name="Sheet1")
