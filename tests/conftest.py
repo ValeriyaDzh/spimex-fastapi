@@ -69,24 +69,6 @@ async def prepare_db():
     logger.info("Database tables delete successfully.")
 
 
-@pytest.fixture(scope="function", autouse=True)
-def fastapi_cache():
-    FastAPICache.init(InMemoryBackend())
-    yield
-
-
-@pytest.fixture(scope="function")
-async def test_session():
-    async with async_session_maker() as session:
-        yield session
-
-
-@pytest.fixture
-def mock_session(mocker):
-    session = mocker.Mock(spec=AsyncSession)
-    return session
-
-
 client = TestClient(app)
 
 
@@ -94,6 +76,24 @@ client = TestClient(app)
 async def api_client() -> AsyncGenerator[AsyncClient, None]:
     async with AsyncClient(app=app, base_url="http://test") as api_client:
         yield api_client
+
+
+@pytest.fixture
+def fastapi_cache():
+    FastAPICache.init(InMemoryBackend())
+    yield
+
+
+@pytest.fixture
+async def test_session():
+    async with async_session_maker() as session:
+        yield session
+
+
+@pytest.fixture
+def mock_session(mocker):
+    session = mocker.AsyncMock(spec=AsyncSession)
+    return session
 
 
 @pytest.fixture
